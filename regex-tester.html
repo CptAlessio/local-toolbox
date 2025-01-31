@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html data-theme="light">
+<head>
+    <title>Regular Expression Tester</title>
+    <style>
+        :root[data-theme="light"] {
+            --bg-color: #f8f9fa;
+            --text-color: #212529;
+            --input-bg: #ffffff;
+            --input-border: #dee2e6;
+            --highlight-bg: #ffd43b;
+            --highlight-text: #000000;
+            --result-bg: #ffffff;
+            --button-bg: #228be6;
+            --button-text: white;
+            --error-color: #fa5252;
+            --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        :root[data-theme="dark"] {
+            --bg-color: #212529;
+            --text-color: #f8f9fa;
+            --input-bg: #343a40;
+            --input-border: #495057;
+            --highlight-bg: #fab005;
+            --highlight-text: #000000;
+            --result-bg: #343a40;
+            --button-bg: #339af0;
+            --button-text: white;
+            --error-color: #ff6b6b;
+            --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 24px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+            line-height: 1.5;
+        }
+
+        .header {
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        label {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        input, textarea {
+            padding: 12px;
+            border: 1px solid var(--input-border);
+            border-radius: 8px;
+            font-family: 'SF Mono', 'Consolas', monospace;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--button-bg);
+            box-shadow: 0 0 0 3px rgba(34, 139, 230, 0.1);
+        }
+
+        button {
+            padding: 12px 24px;
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        button:hover {
+            background-color: var(--button-bg);
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .flags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            padding: 1rem;
+            background-color: var(--result-bg);
+            border-radius: 8px;
+            box-shadow: var(--card-shadow);
+        }
+
+        .flag-option {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        #result {
+            white-space: pre-wrap;
+            font-family: 'SF Mono', 'Consolas', monospace;
+            padding: 1.5rem;
+            border-radius: 8px;
+            min-height: 100px;
+            background-color: var(--result-bg);
+            box-shadow: var(--card-shadow);
+        }
+
+        .highlight {
+            background-color: var(--highlight-bg);
+            color: var(--highlight-text);
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .error {
+            color: var(--error-color);
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .stats {
+            padding: 1.25rem;
+            border-radius: 8px;
+            background-color: var(--result-bg);
+            box-shadow: var(--card-shadow);
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 52px;
+            height: 28px;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ced4da;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--button-bg);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+
+        .theme-switch {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Regex Tester</h1>
+            <div class="theme-switch">
+                <span>Dark Mode</span>
+                <label class="switch">
+                    <input type="checkbox" id="theme-toggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+        
+        <div class="input-group">
+            <label for="pattern">Regular Expression Pattern:</label>
+            <input type="text" id="pattern" placeholder="Enter regex pattern...">
+        </div>
+
+        <div class="flags">
+            <label>Flags:</label>
+            <div class="flag-option">
+                <input type="checkbox" id="global" checked>
+                <label for="global">Global (g)</label>
+            </div>
+            <div class="flag-option">
+                <input type="checkbox" id="case-insensitive">
+                <label for="case-insensitive">Case Insensitive (i)</label>
+            </div>
+            <div class="flag-option">
+                <input type="checkbox" id="multiline">
+                <label for="multiline">Multiline (m)</label>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label for="text">Test Text:</label>
+            <textarea id="text" rows="10" placeholder="Enter text to test against..."></textarea>
+        </div>
+
+        <button onclick="testRegex()">Test Regular Expression</button>
+
+        <div id="error" class="error"></div>
+        
+        <div class="stats" id="stats">
+            <strong>Statistics:</strong>
+            <div>Total matches: <span id="match-count">0</span></div>
+            <div>Match lengths: <span id="match-lengths">-</span></div>
+        </div>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('theme-toggle');
+        themeToggle.addEventListener('change', function() {
+            document.documentElement.setAttribute('data-theme', this.checked ? 'dark' : 'light');
+        });
+
+        function testRegex() {
+            const pattern = document.getElementById('pattern').value;
+            const text = document.getElementById('text').value;
+            const global = document.getElementById('global').checked;
+            const caseInsensitive = document.getElementById('case-insensitive').checked;
+            const multiline = document.getElementById('multiline').checked;
+            const errorDiv = document.getElementById('error');
+            const resultDiv = document.getElementById('result');
+            const matchCountEl = document.getElementById('match-count');
+            const matchLengthsEl = document.getElementById('match-lengths');
+
+            // Clear previous results and errors
+            errorDiv.textContent = '';
+            resultDiv.innerHTML = text;
+            matchCountEl.textContent = '0';
+            matchLengthsEl.textContent = '-';
+
+            if (!pattern) {
+                errorDiv.textContent = 'Please enter a regular expression pattern';
+                return;
+            }
+
+            try {
+                // Build flags string
+                let flags = '';
+                if (global) flags += 'g';
+                if (caseInsensitive) flags += 'i';
+                if (multiline) flags += 'm';
+
+                // Create RegExp object
+                const regex = new RegExp(pattern, flags);
+
+                // Store matches for statistics
+                const matches = [];
+                
+                // If not global, wrap only first match
+                if (!global) {
+                    const match = text.match(regex);
+                    if (match) {
+                        matches.push(match[0]);
+                        const index = match.index;
+                        const matchedText = match[0];
+                        const before = text.substring(0, index);
+                        const after = text.substring(index + matchedText.length);
+                        resultDiv.innerHTML = escapeHtml(before) + 
+                            '<span class="highlight">' + escapeHtml(matchedText) + '</span>' + 
+                            escapeHtml(after);
+                    }
+                } else {
+                    // Find all matches for statistics
+                    let match;
+                    while ((match = regex.exec(text)) !== null) {
+                        matches.push(match[0]);
+                    }
+                    
+                    // Reset regex for replacement
+                    regex.lastIndex = 0;
+                    
+                    // Replace all matches with highlighted versions
+                    resultDiv.innerHTML = escapeHtml(text).replace(regex, 
+                        match => `<span class="highlight">${escapeHtml(match)}</span>`);
+                }
+
+                // Update statistics
+                matchCountEl.textContent = matches.length;
+                if (matches.length > 0) {
+                    const lengths = matches.map(m => m.length);
+                    const minLen = Math.min(...lengths);
+                    const maxLen = Math.max(...lengths);
+                    const avgLen = (lengths.reduce((a, b) => a + b, 0) / lengths.length).toFixed(1);
+                    matchLengthsEl.textContent = `Min: ${minLen}, Max: ${maxLen}, Avg: ${avgLen}`;
+                }
+
+                // If no matches were found, show a message
+                if (matches.length === 0) {
+                    errorDiv.textContent = 'No matches found';
+                }
+
+            } catch (e) {
+                errorDiv.textContent = 'Invalid regular expression: ' + e.message;
+            }
+        }
+
+        function escapeHtml(unsafe) {
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>

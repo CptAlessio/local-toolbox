@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Base64 Decoder</title>
+    <style>
+        :root[data-theme="light"] {
+            --bg-color: #f8f9fa;
+            --text-color: #212529;
+            --input-bg: #ffffff;
+            --input-border: #dee2e6;
+            --container-bg: #ffffff;
+            --button-bg: #228be6;
+            --button-hover: #1c7ed6;
+            --button-text: white;
+            --error-color: #fa5252;
+            --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            --label-color: #495057;
+        }
+
+        :root[data-theme="dark"] {
+            --bg-color: #212529;
+            --text-color: #f8f9fa;
+            --input-bg: #343a40;
+            --input-border: #495057;
+            --container-bg: #343a40;
+            --button-bg: #339af0;
+            --button-hover: #228be6;
+            --button-text: white;
+            --error-color: #ff6b6b;
+            --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            --label-color: #ced4da;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 24px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+            line-height: 1.5;
+        }
+
+        .header {
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0;
+            color: var(--text-color);
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            background-color: var(--container-bg);
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: var(--card-shadow);
+        }
+
+        label {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--label-color);
+        }
+
+        textarea {
+            padding: 12px;
+            border: 1px solid var(--input-border);
+            border-radius: 8px;
+            font-family: 'SF Mono', 'Consolas', monospace;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            transition: border-color 0.2s, box-shadow 0.2s;
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--button-bg);
+            box-shadow: 0 0 0 3px rgba(34, 139, 230, 0.1);
+        }
+
+        select {
+            padding: 12px;
+            border: 1px solid var(--input-border);
+            border-radius: 8px;
+            font-family: inherit;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            width: 100%;
+            max-width: 200px;
+            cursor: pointer;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--button-bg);
+            box-shadow: 0 0 0 3px rgba(34, 139, 230, 0.1);
+        }
+
+        button {
+            padding: 12px 24px;
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.2s;
+            font-weight: 600;
+            font-size: 1rem;
+            align-self: flex-start;
+        }
+
+        button:hover {
+            background-color: var(--button-hover);
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .error {
+            color: var(--error-color);
+            padding: 1rem;
+            border-radius: 8px;
+            background-color: var(--container-bg);
+            box-shadow: var(--card-shadow);
+            display: none;
+            font-weight: 500;
+        }
+
+        .theme-switch {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 52px;
+            height: 28px;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ced4da;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--button-bg);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 1rem;
+                margin: 20px auto;
+            }
+
+            .container {
+                gap: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Base64 Decoder</h1>
+            <div class="theme-switch">
+                <span>Dark Mode</span>
+                <label class="switch">
+                    <input type="checkbox" id="theme-toggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label for="input">Base64 Input:</label>
+            <textarea id="input" placeholder="Enter your Base64 encoded text here..."></textarea>
+        </div>
+
+        <div class="input-group">
+            <label for="encoding">Select Encoding:</label>
+            <select id="encoding">
+                <option value="UTF-8">UTF-8</option>
+                <option value="ASCII">ASCII</option>
+                <option value="ISO-8859-1">ISO-8859-1</option>
+                <option value="ISO-8859-2">ISO-8859-2</option>
+                <option value="ISO-8859-6">ISO-8859-6</option>
+                <option value="ISO-8859-15">ISO-8859-15</option>
+            </select>
+        </div>
+
+        <button onclick="decodeBase64()">Decode</button>
+
+        <div class="input-group">
+            <label for="output">Decoded Output:</label>
+            <textarea id="output" readonly></textarea>
+        </div>
+
+        <div id="error" class="error"></div>
+    </div>
+
+    <script>
+        const themeToggle = document.getElementById('theme-toggle');
+        
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+        const currentTheme = localStorage.getItem('theme');
+
+        if (currentTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            themeToggle.checked = true;
+        } else if (currentTheme === 'light') {
+            document.documentElement.setAttribute('data-theme', 'light');
+            themeToggle.checked = false;
+        } else if (prefersDark.matches) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            themeToggle.checked = true;
+        }
+
+        function switchTheme(e) {
+            const theme = e.target.checked ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+        }
+
+        themeToggle.addEventListener('change', switchTheme);
+
+        function decodeBase64() {
+            const input = document.getElementById('input').value;
+            const encoding = document.getElementById('encoding').value;
+            const outputElement = document.getElementById('output');
+            const errorElement = document.getElementById('error');
+
+            // Reset error and output
+            errorElement.style.display = 'none';
+            outputElement.value = '';
+
+            try {
+                // Check if input is empty
+                if (!input.trim()) {
+                    throw new Error('Please enter some Base64 encoded text');
+                }
+
+                // Decode Base64 to bytes
+                const binaryString = atob(input);
+                
+                // Convert binary string to Uint8Array
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+
+                // Create a TextDecoder with the selected encoding
+                const decoder = new TextDecoder(encoding);
+                
+                // Decode the bytes to text
+                const decodedText = decoder.decode(bytes);
+                
+                // Set the output
+                outputElement.value = decodedText;
+
+            } catch (error) {
+                if (error.name === 'InvalidCharacterError') {
+                    errorElement.textContent = 'Invalid Base64 input';
+                } else {
+                    errorElement.textContent = error.message;
+                }
+                errorElement.style.display = 'block';
+            }
+        }
+
+        // Add event listener for input changes to auto-remove error message
+        document.getElementById('input').addEventListener('input', function() {
+            document.getElementById('error').style.display = 'none';
+        });
+    </script>
+</body>
+</html>

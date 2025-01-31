@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JWT Decoder</title>
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #000000;
+            --pre-bg: #f5f5f5;
+            --header-color-bg: #ff9eaa;
+            --payload-color-bg: #a7ff9e;
+            --signature-color-bg: #9eaaff;
+            --section-border: #e0e0e0;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #1a1a1a;
+            --text-color: #ffffff;
+            --pre-bg: #2d2d2d;
+            --header-color-bg: #8b4449;
+            --payload-color-bg: #4b8b44;
+            --signature-color-bg: #444b8b;
+            --section-border: #333333;
+        }
+
+        * {
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 0 20px;
+            line-height: 1.6;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        /* Dark Mode Toggle Switch */
+        .theme-switch-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .theme-switch {
+            display: inline-block;
+            height: 34px;
+            position: relative;
+            width: 60px;
+        }
+
+        .theme-switch input {
+            display: none;
+        }
+
+        .slider {
+            background-color: #ccc;
+            bottom: 0;
+            cursor: pointer;
+            left: 0;
+            position: absolute;
+            right: 0;
+            top: 0;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            background-color: white;
+            bottom: 4px;
+            content: "";
+            height: 26px;
+            left: 4px;
+            position: absolute;
+            transition: .4s;
+            width: 26px;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        textarea {
+            width: 100%;
+            height: 100px;
+            margin: 10px 0;
+            padding: 10px;
+            font-family: monospace;
+            background-color: var(--pre-bg);
+            color: var(--text-color);
+            border: 1px solid var(--section-border);
+        }
+
+        pre {
+            background: var(--pre-bg);
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 0;
+            border: 1px solid var(--section-border);
+        }
+
+        .error {
+            color: #ff6b6b;
+            font-weight: bold;
+        }
+
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid var(--section-border);
+        }
+
+        .token-part {
+            display: inline-block;
+            padding: 5px 10px;
+            margin: 2px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+
+        .header-color { background-color: var(--header-color-bg); }
+        .payload-color { background-color: var(--payload-color-bg); }
+        .signature-color { background-color: var(--signature-color-bg); }
+
+        .output-container {
+            position: relative;
+            margin-top: 10px;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            padding: 5px 10px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            opacity: 0.8;
+        }
+
+        .copy-btn:hover {
+            opacity: 1;
+        }
+
+        .copy-btn:active {
+            transform: scale(0.98);
+        }
+
+        .token-display {
+            word-break: break-all;
+            margin: 20px 0;
+            line-height: 1.8;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .legend {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header-container">
+        <h1>JWT Decoder</h1>
+        <div class="theme-switch-wrapper">
+            <span>Dark Mode</span>
+            <label class="theme-switch">
+                <input type="checkbox" id="themeToggle">
+                <span class="slider"></span>
+            </label>
+        </div>
+    </div>
+
+    <p>Paste your JWT token below to see its decoded contents:</p>
+    
+    <textarea id="jwtInput" placeholder="Paste your JWT token here..."></textarea>
+
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-color header-color"></div>
+            <span>Header</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color payload-color"></div>
+            <span>Payload</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color signature-color"></div>
+            <span>Signature</span>
+        </div>
+    </div>
+
+    <div id="tokenDisplay" class="token-display"></div>
+    
+    <div class="section">
+        <h3>Header</h3>
+        <div class="output-container">
+            <pre id="headerOutput">Waiting for input...</pre>
+            <button class="copy-btn" onclick="copyContent('headerOutput')">Copy</button>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h3>Payload</h3>
+        <div class="output-container">
+            <pre id="payloadOutput">Waiting for input...</pre>
+            <button class="copy-btn" onclick="copyContent('payloadOutput')">Copy</button>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h3>Signature</h3>
+        <div class="output-container">
+            <pre id="signatureOutput">Waiting for input...</pre>
+            <button class="copy-btn" onclick="copyContent('signatureOutput')">Copy</button>
+        </div>
+    </div>
+
+    <script>
+        // Theme Switcher
+        const themeToggle = document.getElementById('themeToggle');
+        
+        // Check for saved theme preference
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            themeToggle.checked = true;
+        }
+
+        // Theme switch handler
+        themeToggle.addEventListener('change', function(e) {
+            if (e.target.checked) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+            }
+        });
+
+        function decodeJWT(token) {
+            try {
+                const [headerB64, payloadB64, signature] = token.split('.');
+                
+                const header = JSON.parse(atob(headerB64.replace(/-/g, '+').replace(/_/g, '/')));
+                const payload = JSON.parse(atob(payloadB64.replace(/-/g, '+').replace(/_/g, '/')));
+                
+                return {
+                    header,
+                    payload,
+                    signature,
+                    raw: {
+                        header: headerB64,
+                        payload: payloadB64,
+                        signature
+                    }
+                };
+            } catch (e) {
+                return {
+                    error: 'Invalid JWT format: ' + e.message
+                };
+            }
+        }
+
+        async function copyContent(elementId) {
+            const content = document.getElementById(elementId).textContent;
+            try {
+                await navigator.clipboard.writeText(content);
+                const button = event.target;
+                const originalText = button.textContent;
+                button.textContent = 'Copied!';
+                setTimeout(() => {
+                    button.textContent = originalText;
+                }, 1500);
+            } catch (err) {
+                console.error('Failed to copy:', err);
+            }
+        }
+
+        function displayColoredToken(token) {
+            if (!token) {
+                document.getElementById('tokenDisplay').innerHTML = '';
+                return;
+            }
+
+            const parts = token.split('.');
+            if (parts.length !== 3) return;
+
+            const coloredToken = `
+                <span class="token-part header-color">${parts[0]}</span>
+                <span class="token-part payload-color">${parts[1]}</span>
+                <span class="token-part signature-color">${parts[2]}</span>
+            `;
+            document.getElementById('tokenDisplay').innerHTML = coloredToken;
+        }
+
+        function updateOutput() {
+            const token = document.getElementById('jwtInput').value.trim();
+            
+            displayColoredToken(token);
+
+            if (!token) {
+                document.getElementById('headerOutput').textContent = 'Waiting for input...';
+                document.getElementById('payloadOutput').textContent = 'Waiting for input...';
+                document.getElementById('signatureOutput').textContent = 'Waiting for input...';
+                return;
+            }
+            
+            const decoded = decodeJWT(token);
+            
+            if (decoded.error) {
+                document.getElementById('headerOutput').textContent = decoded.error;
+                document.getElementById('payloadOutput').textContent = decoded.error;
+                document.getElementById('signatureOutput').textContent = decoded.error;
+                return;
+            }
+            
+            document.getElementById('headerOutput').textContent = 
+                JSON.stringify(decoded.header, null, 2);
+            document.getElementById('payloadOutput').textContent = 
+                JSON.stringify(decoded.payload, null, 2);
+            document.getElementById('signatureOutput').textContent = 
+                decoded.signature;
+        }
+
+        // Listen for input changes
+        document.getElementById('jwtInput').addEventListener('input', updateOutput);
+
+        // Example token for demonstration
+        const exampleToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c";
+        document.getElementById('jwtInput').placeholder = 
+            `Paste your JWT token here...\n\nExample token:\n${exampleToken}`;
+    </script>
+</body>
+</html>
